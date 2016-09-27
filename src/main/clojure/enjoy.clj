@@ -58,3 +58,32 @@
      (if (nil? pre)
        0
        (+ (num-map pre) (read-from-roman (.substring rom (count pre)))))))
+
+
+;#116 Prime Sandwich
+ (defn balanced-prime?
+   [x]
+   (letfn [(prime? [x]
+             (if (< x 4)
+               true
+               (reduce #(if %
+                         (false? (zero? (rem x %2)))
+                         %) true (range 2 (inc (int (Math/sqrt x)))))))
+           (before-prime
+             [p]
+             (reduce #(if (nil? %)
+                       (if (prime? %2)
+                         %2 nil)
+                       %) nil (range (dec p) 1 -1)))
+           (after-prime
+             [p]
+             (loop [i (inc p)]
+               (if (prime? i)
+                 i
+                 (recur (inc i)))))]
+     (true? (and (prime? x)
+                 (let [p1 (before-prime x)]
+                   (if (nil? p1)
+                     false
+                     (= (+ x x) (+ p1 (after-prime x)))))))))
+
