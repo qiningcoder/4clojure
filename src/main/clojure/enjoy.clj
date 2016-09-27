@@ -87,3 +87,21 @@
                      false
                      (= (+ x x) (+ p1 (after-prime x)))))))))
 
+;#177 Balancing Brackets
+ (defn balanced-brackets?
+   [s]
+   (let [m {\( \) \[ \] \{ \}}
+         ks (set (keys m))
+         vs (set (vals m))]
+     (empty? (reduce #(if (contains? ks %2)
+                       (conj % %2)
+                       (if (contains? vs %2)
+                         (if (empty? %)
+                           (conj % %2)
+                           (if (= (m (last %)) %2)
+                             (vec (drop-last %))
+                             (conj % %2)))
+                         %)) [] s))))
+
+
+
