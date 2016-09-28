@@ -121,5 +121,53 @@
                (concat [e] (find-nested-coll (- n xs) (rest coll)))
                [x])))))))
 
+;#141 Tricky card games
+ (defn find-winner
+   [trump]
+   #(reduce (fn [res e]
+              (let [s1 (:suit res)
+                    s2 (:suit e)
+                    r1 (:rank res)
+                    r2 (:rank e)]
+                (cond
+                  (= s1 s2) (if (< r1 r2) e res)
+                  (= trump s1) res
+                  (= trump s2) e
+                  :else res))) %))
+
+;#150 Palindromic Numbers
+(defn find-all-palindromes-gt-given-a
+  [x]
+  (letfn [(split-num
+            [x]
+            (let [x-str (str x)
+                  len (count x-str)
+                  sub-len (quot len 2)
+                  r (.substring x-str 0 sub-len)
+                  l (.substring x-str (- len sub-len) len)
+                  m (if (odd? len) (.substring x-str sub-len (inc sub-len)))]
+              {:len len :r r :l l :m m}))
+          (find-1st-palindrome-gt-given
+            [x]
+            (let [x-split (split-num x)
+                  r (:r x-split)
+                  rr (apply str (reverse r))
+                  l (:l x-split)
+                  m (:m x-split)
+                  #_gt #_#(= 1 (.compareTo % %2))
+                  gt #(> (read-string %) (read-string %2))]
+              (if (= rr l)
+                x
+                (if (gt rr l)
+                  (read-string (str r m rr))
+                  (find-1st-palindrome-gt-given
+                    (read-string
+                      (apply
+                        str (inc (read-string (str r m)))
+                        (repeat (count r) 0))))))))]
+    (let [palindrome (find-1st-palindrome-gt-given x)]
+      (lazy-cat [palindrome]
+                (find-all-palindromes-gt-given (inc palindrome))))))
+
 
 
