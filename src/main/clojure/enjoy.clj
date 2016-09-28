@@ -103,5 +103,23 @@
                              (conj % %2)))
                          %)) [] s))))
 
+;#112 Sequs Horribilis
+ (defn find-nested-coll
+   [n coll]
+   (if (empty? coll)
+     '()
+     (let [e (first coll)]
+       (if (number? e)
+         (if (<= e n)
+           (concat [e] (find-nested-coll (- n e) (rest coll)))
+           '())
+         (let [x (find-nested-coll n e)
+               xs (apply + (flatten x))]
+           (if (empty? x)
+             '()
+             (if (= xs (apply + (flatten e)))
+               (concat [e] (find-nested-coll (- n xs) (rest coll)))
+               [x])))))))
+
 
 
