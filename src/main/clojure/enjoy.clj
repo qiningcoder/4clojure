@@ -136,16 +136,16 @@
                   :else res))) %))
 
 ;#150 Palindromic Numbers
-(defn find-all-palindromes-gt-given-a
+(defn find-all-palindromes-gt-x
   [x]
   (letfn [(split-num
             [x]
             (let [x-str (str x)
                   len (count x-str)
                   sub-len (quot len 2)
-                  r (.substring x-str 0 sub-len)
-                  l (.substring x-str (- len sub-len) len)
-                  m (if (odd? len) (.substring x-str sub-len (inc sub-len)))]
+                  r (.substring ^String x-str 0 sub-len)
+                  l (.substring ^String x-str (- len sub-len) len)
+                  m (if (odd? len) (.substring ^String x-str sub-len (inc sub-len)))]
               {:len len :r r :l l :m m}))
           (find-1st-palindrome-gt-given
             [x]
@@ -154,8 +154,7 @@
                   rr (apply str (reverse r))
                   l (:l x-split)
                   m (:m x-split)
-                  #_gt #_#(= 1 (.compareTo % %2))
-                  gt #(> (read-string %) (read-string %2))]
+                  gt #_#(> (read-string %) (read-string %2)) #(< 0 (.compareTo ^String % ^String %2))]
               (if (= rr l)
                 x
                 (if (gt rr l)
@@ -167,7 +166,11 @@
                         (repeat (count r) 0))))))))]
     (let [palindrome (find-1st-palindrome-gt-given x)]
       (lazy-cat [palindrome]
-                (find-all-palindromes-gt-given (inc palindrome))))))
+                (find-all-palindromes-gt-x (let [p-str (split-num palindrome)]
+                                             (read-string
+                                               (apply
+                                                 str (inc (read-string (str (:r p-str) (:m p-str))))
+                                                 (repeat (count (:r p-str)) 0)))))))))
 
 
 
