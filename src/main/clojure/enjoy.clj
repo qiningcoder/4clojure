@@ -172,5 +172,141 @@
                                                  str (inc (read-string (str (:r p-str) (:m p-str))))
                                                  (repeat (count (:r p-str)) 0)))))))))
 
+;#195 Parentheses... Again
+ (defn gen-legal-parentheses
+   [cnt]
+   (letfn [(glp [[a b]]
+             (cond
+               (and (zero? a) (zero? b)) #{""}
+               (zero? a) (set (map #(str ")" %)
+                                   (glp [a (dec b)])))
+               (>= a b) (set (map #(str "(" %)
+                                  (glp [(dec a) b])))
+               :else (set (concat (map #(str "(" %)
+                                       (glp [(dec a) b]))
+                                  (map #(str ")" %)
+                                       (glp [a (dec b)]))))))]
+     (glp [cnt cnt])))
+
+;#168 Infinite Matrix
+ (defn gen-ifnt-mtrx
+   ([f m n]
+    (letfn [(gen-mtrx-ij
+              [f i j]
+              (letfn [(gen-row [i j]
+                        (lazy-cat [(f i j)]
+                                  (gen-row i (inc j))))
+                      (gen-column [i j]
+                        (lazy-cat [(gen-row i j)]
+                                  (gen-column (inc i) j)))]
+                (gen-column i j)))]
+      (gen-mtrx-ij f m n)))
+   ([f]
+     (gen-ifnt-mtrx f 0 0))
+   ([f m n s t]
+     (map #(take t %)
+          (take s (gen-ifnt-mtrx f m n)))))
+
+;#73 Analyze a Tic-Tac-Toe Board
+ (defn gen-winner
+   [m]
+   (letfn [(win?
+             [player xs]
+             (some #(apply = player %) xs))
+           (winner?
+             [player]
+             (when (or
+                     (win? player m)
+                     (win? player (apply map #(vec %&) m))
+                     (win? player (let [sz (count m)]
+                             [(for [i (range sz)]
+                                ((m i) i))
+                              (for [i (range sz)]
+                                ((m i) (- sz i 1)))])))
+               player))]
+     (or (winner? :x)
+         (winner? :o))))
+
+;#79 Triangle Minimal Path
+ (defn gen-min-sum
+   [g]
+   (letfn [(val-ij
+             [i j]
+             ((nth g i) j))
+           (min-sum
+             [i j]
+             (if (= i (count g))
+               0
+               (+ (val-ij i j)
+                  (min (min-sum (inc i) j)
+                       (min-sum (inc i) (inc j))))))]
+     (min-sum 0 0)))
+
+;#82 Word Chains
+(defn word-chains?
+  [xs]
+  (letfn [(dis
+            [w1 w2]
+            (if (or (empty? w1)
+                    (empty? w2))
+              (+ (count w1) (count w2))
+              (let [x1 (first w1)
+                    y1 (first w2)]
+                (if (= x1 y1)
+                  (dis (rest w1) (rest w2))
+                  (inc (min (dis (rest w1) (rest w2))
+                            (dis (rest w1) w2)
+                            (dis w1 (rest w2))))))))
+          (chains?
+            ([w1 w2]
+             (= 1 (dis w1 w2)))
+            ([w1 w2 & ws]
+              (and (chains? w1 w2)
+                   (apply chains? w2 ws))))
+          (ps
+            [xs]
+            (if (empty? xs)
+              '(())
+              (apply concat
+                     (for [e xs]
+                       (map #(concat [e] %)
+                            (ps (disj xs e)))))))]
+    (true? (some #(apply chains? %) (ps xs)))))
+
+;#91 Graph Connectivity
+ (defn conn?
+   [edges]
+   (let [bs (map #(into #{} [%])
+                 (distinct (flatten (vec edges))))]
+     (= 1 (count
+            (reduce
+              (fn [bs [x y]]
+                (let [[xs ys]
+                      (filter
+                        #(or (% x) (% y))
+                        bs)]
+                  (if (nil? ys)
+                    bs
+                    (conj
+                      (filter
+                        #(not (or (% x) (% y)))
+                        bs)
+                      (into xs ys)))))
+              bs edges)))))
+
+;#101 Levenshtein Distance
+(defn dis
+  [w1 w2]
+  (if (or (empty? w1)
+          (empty? w2))
+    (+ (count w1) (count w2))
+    (let [x1 (first w1)
+          y1 (first w2)]
+      (if (= x1 y1)
+        (dis (rest w1) (rest w2))
+        (inc (min (dis (rest w1) (rest w2))
+                  (dis (rest w1) w2)
+                  (dis w1 (rest w2))))))))
+
 
 
