@@ -154,7 +154,7 @@
                   rr (apply str (reverse r))
                   l (:l x-split)
                   m (:m x-split)
-                  gt #_#(> (read-string %) (read-string %2)) #(< 0 (.compareTo ^String % ^String %2))]
+                  gt #(< 0 (.compareTo ^String % ^String %2))]
               (if (= rr l)
                 x
                 (if (gt rr l)
@@ -171,6 +171,8 @@
                                                (apply
                                                  str (inc (read-string (str (:r p-str) (:m p-str))))
                                                  (repeat (count (:r p-str)) 0)))))))))
+
+
 
 ;#195 Parentheses... Again
  (defn gen-legal-parentheses
@@ -307,6 +309,116 @@
         (inc (min (dis (rest w1) (rest w2))
                   (dis (rest w1) w2)
                   (dis w1 (rest w2))))))))
+
+;#94 Game of Life
+ (defn next-generation
+   [g]
+   (letfn [(elem
+             [i j]
+             (nth (nth g i) j))
+           (nbs
+             [i j]
+             (let [dirs [[1 0] [1 1] [1 -1]
+                         [0 1] [0 -1]
+                         [-1 1] [-1 0] [-1 -1]]
+                   sz (count g)]
+               (reduce
+                 (fn [res [a b]]
+                   (let [ni (+ i a)
+                         nj (+ j b)]
+                     (cond
+                       (or (>= ni sz) (>= nj sz)
+                           (< ni 0) (< nj 0)) res
+                       (= \# (elem ni nj)) (inc res)
+                       :else res)))
+                 0 dirs)))]
+     (let [res (atom (vec (map vec g)))
+           sz (count g)]
+       (doseq [i (range sz) j (range sz)]
+         (let [e (elem i j)
+               n (nbs i j)]
+           (if (= \space e)
+             (when (= 3 n)
+               (swap! res assoc-in [i j] \#))
+             (when-not (or (= 2 n) (= 3 n))
+               (swap! res assoc-in [i j] \space)))))
+       (vec (map #(apply str %) @res)))))
+
+ #_(fn
+   []
+   (let [q \"
+         src
+         [" (fn"
+          "   []"
+          "   (let [q \""
+          ""]]))
+
+;#119 Win at Tic-Tac-Toe
+ (defn make-winner
+   [player g]
+   (letfn [(win?
+             [player xs]
+             (some #(apply = player %) xs))
+           (winner?
+             [player g]
+             (or
+               (win? player g)
+               (win? player (apply map #(vec %&) g))
+               (win? player (let [sz (count g)]
+                              [(for [i (range sz)]
+                                 ((g i) i))
+                               (for [i (range sz)]
+                                 ((g i) (- sz i 1)))]))))]
+     (let [rs (range (count g))]
+       (reduce
+         (fn [res [g pos]]
+           (if (winner? player g)
+             (conj res pos)
+             res))
+         #{} (keep
+               #(when (= :e (get-in g %))
+                 [(assoc-in g % player) %])
+               (for [x rs y rs] [x y]))))))
+
+;#117 For Science!
+ (defn path?
+   [g]
+   (let [r (count g)
+         c (count (first g))]
+     (letfn [(loc [ch g]
+               (let [ps (for [x (range r)
+                              y (range c)]
+                          [x y])]
+                 (loop [ps ps]
+                   (let [[x y] (first ps)]
+                     (if (= ch (nth (nth g x) y))
+                       [x y]
+                       (recur (rest ps)))))))
+             (find-path
+               [[x y] a-g]
+               (condp = (nth (nth @a-g x) y)
+                 \C true
+                 \# false
+                 (do
+                   (swap! a-g assoc-in [x y] \#)
+                   (some true?
+                         (map #(find-path % a-g)
+                              (keep
+                                (fn [[dx dy]]
+                                  (let [nx (+ x dx)
+                                        ny (+ y dy)]
+                                    (if (and
+                                          (>= nx 0) (< nx r)
+                                          (>= ny 0) (< ny c))
+                                      [nx ny])))
+                                [[-1 0] [1 0]
+                                 [0 -1] [0 1]]))))))]
+       (true?
+         (find-path (loc \M g)
+                    (atom (vec (map vec g))))))))
+
+
+
 
 
 
