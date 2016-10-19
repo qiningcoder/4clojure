@@ -158,18 +158,18 @@
               (if (= rr l)
                 x
                 (if (gt rr l)
-                  (read-string (str r m rr))
+                  (Integer/valueOf (str r m rr))
                   (find-1st-palindrome-gt-given
-                    (read-string
+                    (Integer/valueOf
                       (apply
-                        str (inc (read-string (str r m)))
+                        str (inc (Integer/valueOf (str r m)))
                         (repeat (count r) 0))))))))]
     (let [palindrome (find-1st-palindrome-gt-given x)]
       (lazy-cat [palindrome]
                 (find-all-palindromes-gt-x (let [p-str (split-num palindrome)]
-                                             (read-string
+                                             (Integer/valueOf
                                                (apply
-                                                 str (inc (read-string (str (:r p-str) (:m p-str))))
+                                                 str (inc (Integer/valueOf (str (:r p-str) (:m p-str))))
                                                  (repeat (count (:r p-str)) 0)))))))))
 
 
@@ -417,8 +417,92 @@
          (find-path (loc \M g)
                     (atom (vec (map vec g))))))))
 
+ (defn fps
+   [x]
+   (letfn [(val-of [^String s]
+             (if (empty? s)
+               0
+               (Long/parseLong s)))
+           (fnp [x]
+             (let [x-str (str x)
+                   len (count x-str)
+                   hf (quot len 2)
+                   ten-m (apply * (repeat hf 10))
 
+                   l (quot x ten-m)
+                   r (rem x ten-m)
+                   rl (val-of (clojure.string/reverse
+                                (.substring (str l) 0 hf)))]
+               #_(prn len hf l r rl)
+               (if (= rl r)
+                 x
+                 (if (> rl r)
+                   (+ (* l ten-m) rl)
+                   (+ (* (inc l) ten-m)
+                      (val-of (clojure.string/reverse
+                                (.substring (str (inc l)) 0 hf))))))))
+           (all-ps [x]
+             (let [p (fnp x)]
+               (lazy-cat [p] (all-ps (inc p)))))]
+     (all-ps x)))
 
+(=
+  (take 26 (fps 0))
+  [0 1 2 3 4 5 6 7 8 9
+   11 22 33 44 55 66 77 88 99
+   101 111 121 131 141 151 161])
 
+;Tree reparenting
+(defn gen-tree
+  [nr tree]
+  (let [zp (clojure.zip/seq-zip tree)
+        pnodes (:pnodes (second
+                          (first
+                            (filter
+                              (fn [[nd :as loc]]
+                                (= nr nd))
+                              (iterate clojure.zip/next zp)))))]
+    (reduce (fn [rs e]
+              (concat e (list (remove #(= e %) rs))))
+            pnodes)))
+
+(= '(n)
+   (gen-tree 'n '(n)))
+
+(= '(a (t (e)))
+   (gen-tree 'a '(t (e) (a))))
+
+(= '(e (t (a)))
+   (gen-tree 'e '(a (t (e)))))
+(= '(c
+      (d)
+      (e)
+      (b
+        (f
+          (g)
+          (h))
+        (a
+          (i
+            (j
+              (k)
+              (l))
+            (m
+              (n)
+              (o))))))
+   (gen-tree 'c '(a
+             (b
+               (c
+                 (d)
+                 (e))
+               (f
+                 (g)
+                 (h)))
+             (i
+               (j
+                 (k)
+                 (l))
+               (m
+                 (n)
+                 (o))))))
 
 
