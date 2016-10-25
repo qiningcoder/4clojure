@@ -466,43 +466,45 @@
               (concat e (list (remove #(= e %) rs))))
             pnodes)))
 
-(= '(n)
-   (gen-tree 'n '(n)))
+;Analyze Reversi
 
-(= '(a (t (e)))
-   (gen-tree 'a '(t (e) (a))))
-
-(= '(e (t (a)))
-   (gen-tree 'e '(a (t (e)))))
-(= '(c
-      (d)
-      (e)
-      (b
-        (f
-          (g)
-          (h))
-        (a
-          (i
-            (j
-              (k)
-              (l))
-            (m
-              (n)
-              (o))))))
-   (gen-tree 'c '(a
-             (b
-               (c
-                 (d)
-                 (e))
-               (f
-                 (g)
-                 (h)))
-             (i
-               (j
-                 (k)
-                 (l))
-               (m
-                 (n)
-                 (o))))))
+(defn analyze-reversi
+  [graph color]
+  (let [size (count graph)
+        pos-seq (for [x (range 0 size)
+                      y (range 0 size)]
+                  [x y])
+        dirs (remove
+               (fn [[x y]]
+                 (and (zero? x) (zero? y)))
+               (for [x [-1 0 1]
+                     y [-1 0 1]]
+                 [x y]))
+        legal-pos? (fn [x y]
+                     (and (>= x 0) (< x size)
+                          (>= y 0) (< y size)))
+        reverse-pos-on-one-dir
+        (fn [[x y] [dx dy]]
+           (if (not= 'e (get-in graph [x y]))
+             [[x y] #{}]
+             (loop [nx (+ x dx) ny (+ y dy) res #{}]
+               (if (legal-pos? nx ny)
+                 (if (= color (get-in graph [nx ny]))
+                   [[x y] res]
+                   (if (= 'e (get-in graph [nx ny]))
+                     [[x y] #{}]
+                     (recur (+ nx dx) (+ ny dy) (conj res [nx ny]))))
+                 [[x y] #{}]))))
+        reverse-pos-on-all-dirs
+        (fn [[x y]]
+          (reduce (fn [[pos1 ps1] [pos2 ps2]]
+                    [pos1 (clojure.set/union ps1 ps2)])
+                  (map (fn [dir]
+                         (reverse-pos-on-one-dir [x y] dir)) dirs)))]
+    (into {}
+          (filter (fn [[pos ps]]
+                    (not (empty? ps)))
+                  (map reverse-pos-on-all-dirs
+                       pos-seq)))))
 
 
